@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Store</title>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        .more{
+            color:green;
+        }
+        .less{
+            color:orange;
+        }
+        .book{
+            margin-top: 10vh;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="mainApp">
+        <!-- Navbar -->
+        <nav class="navbar bg-dark fixed-top">
+            <div class="container p-2">
+              <a class="navbar-brand text-warning " @click.prevent="isBookVisible=false">Book Store</a>
+              <div class="d-flex">
+                <p class="text-light px-2 h5">[{{cart.books.length}}] <span v-if="cart.books.length==1">book</span> <span v-else>books</span> with total price [{{changeCurrancy(getTotalPrice())}}]</p>
+                <button class="btn btn-success" @click.prevent="isBookVisible=true">Show books</button>
+              </div>
+            </div>
+          </nav>
+          <!-- End -->
+          <!-- books store -->
+          <div class="row text-center book" v-if="isBookVisible==false">
+            <div v-for="book in books" class="card d-flex bg-light bg-gradient" style="width:20rem;margin: 0.3rem;" >
+                <img :src="book.image" :title="book.name">
+                <p class="bg-secondary m-auto p-1 text-light my-1">{{book.category}}</p>
+                <h4>{{book.auther}}</h4>
+                <h4 :class="[book.noOfPages>=300?'more':'',book.noOfPages<300?'less':'']">{{book.noOfPages}}</h4>
+                <h4>{{changeCurrancy(book.price)}}</h4>
+                <p>{{book.ISBN}}</p>
+                <div class="card-footer">
+                    <button class="btn btn-primary m-auto mb-2" @click="addtoStore(book)">AddTOList</button>
+                </div>
+              </div> 
+          </div>
+          <!-- End -->
+          <!-- footer -->
+          <footer class="bg-dark">
+                <p class="text-center text-light p-3">this website made by :Rehab Kosbar &copy; 2024</p>
+          </footer>
+          <!-- End -->
+    <!-- Show books -->
+    <div class="container">
+        <div class="row text-center" v-if="isBookVisible==true">
+            <h3 class="text-danger my-4" v-if="cart.books.length==0">Sorry, No Books are founded !</h3>
+            <table class="table m-5" v-else>
+                <thead>
+                    <tr>
+                        <th>ISBN</th>
+                        <th>Name</th>
+                        <th>Auther</th>
+                        <th>Quantity</th>
+                        <th>Actions</th>
+                        <th>Total Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="bookItem in cart.books">
+                        <td>{{bookItem.book.ISBN}}</td>
+                        <td>{{bookItem.book.name}}</td>
+                        <td>{{bookItem.book.auther}}</td>
+                        <td>{{bookItem.quantity}}</td>
+                        <td><button class="btn btn-success" @click="icreasement(bookItem)">+</button> | <button class="btn btn-danger" @click="decreasement(bookItem)">-</button></td>
+                        <td>{{ changeCurrancy(bookItem.book.price * bookItem.quantity)}}</td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="4">Total price</td>
+                        <td>{{changeCurrancy(getTotalPrice())}}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="4">Total taxes</td>
+                        <td>{{changeCurrancy(getTotalPrice()*0.1)}}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="4">Grand Total</td>
+                        <td>{{changeCurrancy(getTotalPrice()*0.1 + getTotalPrice())}}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+    </div>
+    
+
+
+    <!-- End -->
+
+    <script src="js/books.js"></script>
+    <script>
+        const app = Vue.createApp({
+            data:()=>({
+                books:books,
+                isBookVisible:false,
+                cart:{
+                    books:[
+
+                    ]
+                }
+            }),
+            methods:{
+                icreasement(bookItem){
+                    bookItem.quantity++;
+                },
+                decreasement(bookItem){
+                    bookItem.quantity--;
+                    if (bookItem.quantity === 0) {
+                        const removeBook = this.cart.books.findIndex(item => item.book.ISBN === bookItem.book.ISBN);
+                        if (removeBook !== -1) {
+                            this.cart.books.splice(removeBook, 1);
+                        }
+                    }
+                },
+                checkexistence(book){
+                    return this.cart.books.some(bookItem => bookItem.book.ISBN === book.ISBN);
+                },
+                addtoStore(book){
+                    
+                    if (!this.checkexistence(book)) {
+                        this.cart.books.push({ book: book, quantity: 1 });
+                    } else {
+                        this.cart.books.find(bookItem => bookItem.book.ISBN === book.ISBN).quantity++;
+                    }
+                },
+                getTotalPrice(){
+                    let totalPrice = 0;
+                    for(let i = 0; i< this.cart.books.length; i++){
+                        totalPrice+= this.cart.books[i].book.price*this.cart.books[i].quantity;
+                    }
+                    return totalPrice;
+                },
+                changeCurrancy(val){
+                    return Intl.NumberFormat("en-US",{
+                        style:"currency",
+                        currency:"USD",
+                        minimumFractionDigits:0
+                    }).format(val);
+                }
+            }
+        });
+        app.mount("#mainApp");
+    </script>
+</body>
+</html>
